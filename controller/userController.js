@@ -14,20 +14,20 @@ export const register = catchAsyncErrors(async (req, res, next) => {
   }
   const { avatar, resume } = req.files;
 
-    //POSTING AVATAR
-    const cloudinaryResponseForAvatar = await cloudinary.uploader.upload(
-      avatar.tempFilePath,
-      { folder: "PORTFOLIO AVATAR" }
+  //POSTING AVATAR
+  const cloudinaryResponseForAvatar = await cloudinary.uploader.upload(
+    avatar.tempFilePath,
+    { folder: "PORTFOLIO AVATAR" }
+  );
+  if (!cloudinaryResponseForAvatar || cloudinaryResponseForAvatar.error) {
+    console.error(
+      "Cloudinary Error:",
+      cloudinaryResponseForAvatar.error || "Unknown Cloudinary error"
     );
-    if (!cloudinaryResponseForAvatar || cloudinaryResponseForAvatar.error) {
-      console.error(
-        "Cloudinary Error:",
-        cloudinaryResponseForAvatar.error || "Unknown Cloudinary error"
-      );
-      return next(new ErrorHandler("Failed to upload avatar to Cloudinary", 500));
-    }
+    return next(new ErrorHandler("Failed to upload avatar to Cloudinary", 500));
+  }
 
-    //POSTING RESUME
+  //POSTING RESUME
   const cloudinaryResponseForResume = await cloudinary.uploader.upload(
     resume.tempFilePath,
     { folder: "PORTFOLIO RESUME" }
@@ -102,6 +102,8 @@ export const logout = catchAsyncErrors(async (req, res, next) => {
     .cookie("token", "", {
       httpOnly: true,
       expires: new Date(Date.now()),
+      sameSite: "None",
+      secure: true,
     })
     .json({
       success: true,
@@ -184,11 +186,11 @@ export const updatePassword = catchAsyncErrors(async (req, res, next) => {
   }
   const isPasswordMatched = await user.comparePassword(currentPassword);
   if (!isPasswordMatched) {
-    return next(new ErrorHandler("Incorrect Current Password!",400));
+    return next(new ErrorHandler("Incorrect Current Password!", 400));
   }
   if (newPassword !== confirmNewPassword) {
     return next(
-      new ErrorHandler("New Password And Confirm New Password Do Not Match!",400)
+      new ErrorHandler("New Password And Confirm New Password Do Not Match!", 400)
     );
   }
   user.password = newPassword;
